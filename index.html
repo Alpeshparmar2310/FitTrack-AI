@@ -2030,11 +2030,14 @@ async function callGemini(prompt, systemPrompt, maxTokens=1800){
 
   const buildContents = () => {
     const msgs = [];
+    // Inject system prompt as first turn — works on ALL models
+    msgs.push({role:'user',  parts:[{text:'[INSTRUCTIONS]\n'+systemPrompt+'\n\nConfirm you understand.'}]});
+    msgs.push({role:'model', parts:[{text:'Understood. I will follow all instructions precisely.'}]});
     if(chatHistory.length > 1){
       chatHistory.slice(-8).forEach(m=>{
         msgs.push({ role: m.role==='assistant'?'model':'user', parts:[{text:m.content}] });
       });
-      if(!msgs.length || msgs[msgs.length-1].role!=='user')
+      if(msgs[msgs.length-1].role!=='user')
         msgs.push({role:'user', parts:[{text:prompt}]});
     } else {
       msgs.push({role:'user', parts:[{text:prompt}]});
@@ -2045,15 +2048,14 @@ async function callGemini(prompt, systemPrompt, maxTokens=1800){
   let lastErr = null;
   for(const model of models){
     try{
-      // Use v1 (not v1beta) — has proper CORS headers for browser access
-      const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+      // v1beta supports system_instruction; v1 does not
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
       const r = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: buildContents(),
-          systemInstruction: { parts:[{text: systemPrompt}] },
           generationConfig:{ maxOutputTokens: maxTokens, temperature: 0.7 }
         })
       });
