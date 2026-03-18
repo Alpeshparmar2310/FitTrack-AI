@@ -9,15 +9,19 @@ export default async function handler(req, res) {
   try {
     const { key, model, contents, generationConfig } = req.body;
 
-    if (!key) return res.status(400).json({ error: { message: 'Missing API key' } });
-    if (!model) return res.status(400).json({ error: { message: 'Missing model' } });
-    if (!contents) return res.status(400).json({ error: { message: 'Missing contents' } });
+    if (!key || !model || !contents) {
+      return res.status(400).json({ error: { message: 'Missing key, model, or contents' } });
+    }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    // Correct: use x-goog-api-key header (not URL param)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const geminiRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
       body: JSON.stringify({ contents, generationConfig })
     });
 
