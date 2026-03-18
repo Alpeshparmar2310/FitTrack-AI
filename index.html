@@ -2022,8 +2022,12 @@ async function callGemini(prompt, systemPrompt, maxTokens=1800){
   const key = await getAPIKey('gemini');
   if(!key) throw new Error('NO_GEMINI_KEY');
 
-  // Current free models as of 2025 — in order of preference
-  const models = ['gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
+  // Current working free models (March 2026)
+  const models = [
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+  ];
 
   // Build contents — inject system as first turn (works on all models)
   const buildContents = () => {
